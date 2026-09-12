@@ -1,3 +1,7 @@
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![pytest](https://img.shields.io/badge/pytest-100%25-green.svg)](https://docs.pytest.org/)
+
 # Hard-to-Value Asset Valuation & Risk Engine
 
 A high-performance quantitative valuation and risk engine designed for illiquid assets, private credit portfolios, and hard-to-value structured notes. The architecture enforces zero-copy C-contiguous memory layouts, strict vectorization (avoiding explicit Python loops and `.apply()` bottlenecks), and institutional-grade QuantLib yield curve bootstrapping.
