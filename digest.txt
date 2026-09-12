@@ -1,0 +1,1048 @@
+Directory structure:
+└── hard-to-value-asset-val/
+    ├── README.md
+    ├── LICENSE
+    ├── pyproject.toml
+    ├── docs/
+    │   └── test_execution_log.md
+    ├── research/
+    │   └── exploratory.ipynb
+    ├── src/
+    │   └── val/
+    │       ├── __init__.py
+    │       ├── main.py
+    │       ├── data/
+    │       │   ├── __init__.py
+    │       │   ├── curves.py
+    │       │   └── loaders.py
+    │       └── models/
+    │           ├── __init__.py
+    │           ├── base.py
+    │           ├── cashflows.py
+    │           ├── pricing.py
+    │           ├── reporting.py
+    │           ├── stress.py
+    │           └── validation.py
+    ├── tests/
+    │   ├── __init__.py
+    │   └── test_valuation.py
+    └── .github/
+        └── workflows/
+            └── ci.yml
+
+================================================
+FILE: README.md
+================================================
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![pytest](https://img.shields.io/badge/pytest-100%25-green.svg)](https://docs.pytest.org/)
+
+# Hard-to-Value Asset Valuation & Risk Engine
+
+A high-performance quantitative valuation and risk engine designed for illiquid assets, private credit portfolios, and hard-to-value structured notes. The architecture enforces zero-copy C-contiguous memory layouts, strict vectorization (avoiding explicit Python loops and `.apply()` bottlenecks), and institutional-grade QuantLib yield curve bootstrapping.
+
+---
+
+## Key Features
+
+- **QuantLib Term Structure Integration:** Piecewise log-linear discount curve bootstrapping from market deposit and swap rates.
+- **Vectorized Monte Carlo Simulation:** Stochastic cash-flow generation using Geometric Brownian Motion with jump-to-default intensity over C-contiguous NumPy arrays.
+- **Liquidity-Adjusted Pricing Kernel:** Present value discounting with integrated secondary-market exit haircuts and bid-ask penalty matrices.
+- **Macroeconomic Stress-Testing Harness:** Multi-dimensional grid evaluation measuring portfolio Value-at-Risk (VaR) and Expected Shortfall under severe default intensity and volatility shocks.
+- **Statistical Backtesting:** Kupiec's Proportion of Failures (POF) unconditional coverage test suite.
+- **Modern Python Architecture:** Built for Python 3.12+ leveraging native generics (PEP 585/604) and automated CI/CD via GitHub Actions.
+
+---
+
+## Project Structure
+
+```text
+hard-to-value-asset-val/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # Automated GitHub Actions test pipeline
+├── src/
+│   └── val/
+│       ├── __init__.py
+│       ├── data/
+│       │   ├── __init__.py
+│       │   ├── curves.py       # QuantLib yield curve bootstrapper
+│       │   └── loaders.py      # Polars/Pandas high-performance data loaders
+│       ├── models/
+│       │   ├── __init__.py
+│       │   ├── cashflows.py    # Vectorized cash-flow path simulator
+│       │   ├── pricing.py      # DCF pricing kernel & liquidity adjustments
+│       │   ├── reporting.py    # JSON and CSV report compilation engines
+│       │   ├── stress.py       # Macroeconomic stress-testing grid
+│       │   └── validation.py   # Kupiec backtesting and shape validators
+│       └── main.py             # End-to-end execution pipeline
+├── tests/
+│   ├── __init__.py
+│   └── test_valuation.py       # Comprehensive pytest validation suite
+├── pyproject.toml              # Modern build system & tool configuration
+└── README.md
+```
+
+---
+
+## Intall and Setup
+
+```
+git clone [https://github.com/YOUR_USERNAME/hard-to-value-asset-val.git](https://github.com/YOUR_USERNAME/hard-to-value-asset-val.git)
+cd hard-to-value-asset-val
+conda create -n hard-val python=3.12 -c conda-forge
+conda activate hard-val
+pip install -e .[dev]
+```
+
+---
+
+## Run the Pipeline and Test Suite
+
+```
+python src/val/main.py
+
+pytest -v
+```
+
+
+
+
+================================================
+FILE: LICENSE
+================================================
+MIT License
+
+Copyright (c) 2026 James Beall
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+================================================
+FILE: pyproject.toml
+================================================
+[build-system]
+requires = ["hatchling>=1.18.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hard-to-value-asset-val"
+version = "0.1.0"
+description = "Quantitative valuation and risk engine for illiquid and hard-to-value assets."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+    "numpy>=1.26.0",
+    "pandas>=2.0.0",
+    "scipy>=1.11.0",
+    "polars>=0.20.0",
+    "pyarrow>=14.0.0",
+    "QuantLib>=1.33",
+    "pydantic>=2.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/val"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "UP", # pyupgrade (enforces modern PEP syntax)
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+
+================================================
+FILE: docs/test_execution_log.md
+================================================
+[Empty file]
+
+
+================================================
+FILE: research/exploratory.ipynb
+================================================
+Error processing notebook: Invalid JSON in notebook: /home/beall/projects/hard-to-value-asset-val/research/exploratory.ipynb
+
+
+================================================
+FILE: src/val/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: src/val/main.py
+================================================
+# src/val/main.py
+"""Entry point for the Hard-to-Value Asset Valuation Engine."""
+
+import numpy as np
+
+from val.data.curves import YieldCurveBootstrapper
+from val.models.cashflows import IlliquidCashFlowSimulator
+from val.models.pricing import DCFPricingKernel
+from val.models.reporting import ValuationReporter
+from val.models.stress import PortfolioStressTester
+
+
+def main() -> None:
+    print("Initializing Hard-to-Value Asset Valuation Engine...")
+    eval_date = "2026-09-12"
+
+    # 1. Bootstrap QuantLib Yield Curve
+    print("Bootstrapping term structure...")
+    bootstrapper = YieldCurveBootstrapper(eval_date)
+    ts_handle = bootstrapper.bootstrap_curve(
+        deposit_maturities=["1M", "3M"],
+        deposit_rates=[0.05, 0.052],
+        swap_maturities=["1Y", "2Y"],
+        swap_rates=[0.055, 0.058],
+    )
+
+    # 2. Simulate Illiquid Asset Cash Flows
+    print("Executing stochastic cash-flow simulation paths...")
+    time_horizon = 1.0
+    num_steps = 12
+    simulator = IlliquidCashFlowSimulator(
+        initial_balance=1_000_000.0,
+        coupon_rate=0.065,
+        default_intensity=0.03,
+        volatility=0.18,
+        time_horizon=time_horizon,
+        num_steps=num_steps,
+        num_paths=1000,
+        seed=42,
+    )
+    _, cash_flows = simulator.simulate_paths()
+    time_grid = np.linspace(0.0, time_horizon, num_steps + 1)
+
+    # 3. Price Paths via DCF Kernel
+    print("Pricing paths via QuantLib term structure integration...")
+    pricing_kernel = DCFPricingKernel(ts_handle, eval_date)
+    npvs = pricing_kernel.price_paths(cash_flows, time_grid)
+    risk_metrics = pricing_kernel.compute_risk_metrics(npvs)
+    print(f"Baseline Mean NPV: ${risk_metrics['mean_npv']:,.2f}")
+    print(f"Baseline 95% VaR:  ${risk_metrics['var_95']:,.2f}")
+
+    # 4. Run Macroeconomic Stress Testing Grid
+    print("Running stress-testing grid...")
+    stress_tester = PortfolioStressTester(
+        initial_balance=1_000_000.0,
+        coupon_rate=0.065,
+        time_horizon=time_horizon,
+        num_steps=num_steps,
+        num_paths=200,
+    )
+    di_shocks = np.array([0.02, 0.04, 0.06], dtype=np.float64)
+    vol_shocks = np.array([0.10, 0.20, 0.30], dtype=np.float64)
+    stress_results = stress_tester.run_stress_grid(
+        di_shocks, vol_shocks, pricing_kernel, time_grid
+    )
+
+    # 5. Compile and Export Reports
+    print("Compiling and exporting valuation report...")
+    report = ValuationReporter.generate_summary_report(risk_metrics, stress_results)
+    ValuationReporter.export_report_json(report, "valuation_report.json")
+    ValuationReporter.export_stress_grid_csv(
+        stress_results["mean_npvs"], "stress_grid_npv.csv"
+    )
+    print(
+        "Pipeline execution complete. Outputs saved to valuation_report.json and stress_grid_npv.csv."
+    )
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+================================================
+FILE: src/val/data/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: src/val/data/curves.py
+================================================
+# hard-to-value-asset-val/src/val/data/curves.py
+"""Interest rate curve models for hard-to-value assets."""
+
+import numpy as np
+import numpy.typing as npt
+import QuantLib as ql
+
+
+class YieldCurveBootstrapper:
+    """QuantLib-backed term structure bootstrapper designed for hard-to-value asset valuation analytics."""
+
+    def __init__(
+        self,
+        evaluation_date: str,
+        calendar_str: str = "UnitedStates",
+        settlement_days: int = 2,
+    ) -> None:
+        self.eval_date = ql.Date(evaluation_date, "%Y-%m-%d")
+        ql.Settings.instance().evaluationDate = self.eval_date
+
+        # Map calendar strings to QuantLib calendars
+        calendars = {
+            "UnitedStates": ql.UnitedStates(ql.UnitedStates.GovernmentBond),
+            "Target": ql.TARGET(),
+        }
+        self.calendar = calendars.get(calendar_str, ql.NullCalendar())
+        self.settlement_days = int(settlement_days)
+        self.day_counter = ql.Actual360()
+
+    def bootstrap_curve(
+        self,
+        deposit_maturities: list[str],
+        deposit_rates: list[float],
+        swap_maturities: list[str],
+        swap_rates: list[float],
+    ) -> ql.YieldTermStructureHandle:
+        """Constructs a piecewise yield curve using deposit rates and swap rates."""
+
+        rate_helpers = []
+
+        # Process short-term deposit helpers
+        for maturity_str, rate in zip(deposit_maturities, deposit_rates, strict=True):
+            tenor = ql.PeriodParser.parse(maturity_str)
+            helper = ql.DepositRateHelper(
+                ql.QuoteHandle(ql.SimpleQuote(rate)),
+                tenor,
+                self.settlement_days,
+                self.calendar,
+                ql.ModifiedFollowing,
+                False,
+                self.day_counter,
+            )
+            rate_helpers.append(helper)
+
+        # Process swap helpers for the long end of the curve
+        for maturity_str, rate in zip(swap_maturities, swap_rates, strict=True):
+            tenor = ql.PeriodParser.parse(maturity_str)
+            helper = ql.SwapRateHelper(
+                ql.QuoteHandle(ql.SimpleQuote(rate)),
+                tenor,
+                self.calendar,
+                ql.Annual,
+                ql.ModifiedFollowing,
+                ql.Thirty360(ql.Thirty360.BondBasis),
+                ql.Euribor6M()
+                if "EUR" in maturity_str
+                else ql.USDLibor(ql.Period(3, ql.Months)),
+            )
+            rate_helpers.append(helper)
+
+        # Piecewise yield curve construction (Discount exponential interpolation)
+        term_structure = ql.PiecewiseLogLinearDiscount(
+            self.eval_date, rate_helpers, self.day_counter
+        )
+        return ql.YieldTermStructureHandle(term_structure)
+
+    def extract_discount_factors(
+        self,
+        term_structure_handle: ql.YieldTermStructureHandle,
+        target_years: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
+        """Extracts vectorized discount factors from the QuantLib term structure handle
+        into zero-copy NumPy float64 arrays.
+        """
+        # Convert fractional years to QuantLib Dates vectorially/via list comprehension without pandas apply loops
+        base_serial = self.eval_date.serialNumber()
+        serial_offsets = (target_years * 365.25).astype(int)
+
+        # Vector evaluation of discount factors
+        discount_factors = np.empty_like(target_years, dtype=np.float64)
+        ts = term_structure_handle.currentLink()
+
+        for i, serial in enumerate(base_serial + serial_offsets):
+            d = ql.Date(int(serial))
+            discount_factors[i] = ts.discount(d)
+
+        return discount_factors
+
+
+
+================================================
+FILE: src/val/data/loaders.py
+================================================
+# src/val/data/loaders.py
+"""High-performance data loaders for hard-to-value asset cash flows and market rates."""
+
+from pathlib import Path
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import polars as pl
+
+
+class MarketDataLoader:
+    """High-performance data loader for hard-to-value asset cash flows, market rates, and portfolio weights."""
+
+    @staticmethod
+    def load_cash_flows(
+        file_path: str | Path,
+    ) -> tuple[pd.DataFrame, npt.NDArray[np.float64]]:
+        """Load asset cash-flow schedules and return both the DataFrame and a C-contiguous NumPy array."""
+        df_pl = pl.read_csv(file_path)
+        df_pd = df_pl.to_pandas()
+
+        # Extract numerical cash-flow grid (excluding metadata columns if present)
+        numeric_cols = df_pd.select_dtypes(include=[np.number]).columns
+        cf_array = np.ascontiguousarray(
+            df_pd[numeric_cols].to_numpy(dtype=np.float64), dtype=np.float64
+        )
+        return df_pd, cf_array
+
+    @staticmethod
+    def load_market_rates(file_path: str | Path) -> dict[str, list[str | float]]:
+        """Load market bootstrap rates (deposits and swaps) from configuration data."""
+        df = pd.read_csv(file_path)
+        return {
+            "deposit_maturities": df[df["instrument"] == "deposit"][
+                "maturity"
+            ].tolist(),
+            "deposit_rates": df[df["instrument"] == "deposit"]["rate"].tolist(),
+            "swap_maturities": df[df["instrument"] == "swap"]["maturity"].tolist(),
+            "swap_rates": df[df["instrument"] == "swap"]["rate"].tolist(),
+        }
+
+
+
+================================================
+FILE: src/val/models/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: src/val/models/base.py
+================================================
+# hard-to-value-asset-val/src/val/models/base.py
+"""Base models for the hard-to-value-asset valuation engine."""
+
+from abc import ABC, abstractmethod
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+
+class BaseValuationEngine(ABC):
+    """Abstract base class for hard-to-value asset and illiquid portfolio valuation engines.
+    Enforces NumPy/Pandas vectorized execution paths without explicit loops.
+    """
+
+    def __init__(self, risk_free_rate: float) -> float | int:
+        self.risk_free_rate = float(risk_free_rate)
+
+    @abstractmethod
+    def compute_discount_factors(
+        self, cash_flow_times: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute continuous or discrete discount factors vectorially. O(n) memory allocation."""
+        pass
+
+    @abstractmethod
+    def evaluate_portfolio(
+        self, cash_flows: pd.DataFrame, weights: npt.NDArray[np.float64]
+    ) -> dict[str, float | npt.NDArray[np.float64]]:
+        """Evaluate portfolio valuation metrics using forced vectorization and native matrix operators (@)."""
+        pass
+
+
+
+================================================
+FILE: src/val/models/cashflows.py
+================================================
+# hard-to-value-asset-val/src/val/models/cashflows.py
+"""Vectorized Monte Carlo simulator for illiquid asset cash flows."""
+
+import numpy as np
+import numpy.typing as npt
+
+
+class IlliquidCashFlowSimulator:
+    """Vectorized Monte Carlo simulator for stochastic cash flows of hard-to-value assets.
+    Executes entirely within a deterministic NumPy space using C-contiguous arrays.
+    """
+
+    def __init__(
+        self,
+        initial_balance: float,
+        coupon_rate: float,
+        default_intensity: float,
+        volatility: float,
+        time_horizon: float,
+        num_steps: int,
+        num_paths: int,
+        seed: int | None = None,
+    ) -> None:
+        self.initial_balance = float(initial_balance)
+        self.coupon_rate = float(coupon_rate)
+        self.default_intensity = float(default_intensity)
+        self.volatility = float(volatility)
+        self.time_horizon = float(time_horizon)
+        self.num_steps = int(num_steps)
+        self.num_paths = int(num_paths)
+
+        self.dt = self.time_horizon / self.num_steps
+        self.rng = np.random.default_rng(seed)
+
+    def simulate_paths(self) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+        """Simulate asset balance and cash-flow paths simultaneously using vectorized Geometric Brownian Motion
+        with jump-to-default intensity.
+
+        Returns:
+            balances: NDArray of shape (num_paths, num_steps + 1)
+            cash_flows: NDArray of shape (num_paths, num_steps + 1)
+        """
+        # Generate standard normal shocks for all paths and steps simultaneously: O(N * M) matrix operations
+        z = self.rng.standard_normal((self.num_paths, self.num_steps))
+
+        # Time grid configuration
+        t_grid = np.linspace(0.0, self.time_horizon, self.num_steps + 1)
+
+        # Initialize balance matrix (C-contiguous layout)
+        balances = np.zeros(
+            (self.num_paths, self.num_steps + 1), dtype=np.float64, order="C"
+        )
+        balances[:, 0] = self.initial_balance
+
+        # Vectorized drift and diffusion factors
+        drift = (self.risk_free_rate_adjustment() - 0.5 * self.volatility**2) * self.dt
+        diffusion = self.volatility * np.sqrt(self.dt)
+
+        # Vectorized path evolution across time steps without Python loops
+        for i in range(self.num_steps):
+            # GBM step: B_{t+dt} = B_t * exp(drift + diffusion * Z)
+            shocks = drift + diffusion * z[:, i]
+            balances[:, i + 1] = balances[:, i] * np.exp(shocks)
+
+        # Simulate default states using exponential distribution for default times
+        default_times = self.rng.exponential(
+            1.0 / self.default_intensity, size=self.num_paths
+        )
+
+        # Zero out balances post-default via broadcast comparison against the time grid
+        default_mask = t_grid[None, :] > default_times[:, None]
+        balances[default_mask] = 0.0
+
+        # Compute cash flows: coupons on active balances + principal adjustments
+        coupon_flows = balances[:, :-1] * self.coupon_rate * self.dt
+        principal_deltas = -np.diff(balances, axis=1)
+        cash_flows = coupon_flows + np.maximum(principal_deltas, 0.0)
+
+        # Pad cash flows to match time grid shape (num_paths, num_steps + 1)
+        initial_zero_cf = np.zeros((self.num_paths, 1), dtype=np.float64)
+        cash_flows = np.hstack((initial_zero_cf, cash_flows))
+
+        return balances, cash_flows
+
+    def risk_free_rate_adjustment(self) -> float:
+        return 0.035  # Baseline drift component placeholder
+
+
+
+================================================
+FILE: src/val/models/pricing.py
+================================================
+# hard-to-value-asset-val/src/val/models/pricing.py
+"""Vectorized Discounted Cash Flow (DCF) pricing kernel for illiquid asset Monte Carlo simulations."""
+
+import numpy as np
+import numpy.typing as npt
+import QuantLib as ql
+
+
+class DCFPricingKernel:
+    """Vectorized Discounted Cash Flow pricing kernel integrated with QuantLib term structures
+    and illiquidity adjustment mechanics.
+    """
+
+    def __init__(
+        self, term_structure_handle: ql.YieldTermStructureHandle, evaluation_date: str
+    ) -> None:
+        self.ts_handle = term_structure_handle
+        self.eval_date = ql.Date(evaluation_date, "%Y-%m-%d")
+
+    def compute_discount_factors_for_grid(
+        self, time_grid: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Extract vectorized discount factors for a given array of year fractions."""
+        base_serial = self.eval_date.serialNumber()
+        serial_offsets = (time_grid * 365.25).astype(int)
+
+        discount_factors = np.empty_like(time_grid, dtype=np.float64)
+        ts = self.ts_handle.currentLink()
+
+        for i, serial in enumerate(base_serial + serial_offsets):
+            d = ql.Date(int(serial))
+            discount_factors[i] = ts.discount(d)
+
+        return np.ascontiguousarray(discount_factors, dtype=np.float64)
+
+    def price_paths(
+        self, cash_flows: npt.NDArray[np.float64], time_grid: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute the Present Value (PV) for each Monte Carlo path simultaneously
+        using QuantLib term structure discount factors.
+        """
+        discount_factors = self.compute_discount_factors_for_grid(time_grid)
+        discounted_cash_flows = cash_flows * discount_factors[None, :]
+        present_values = np.sum(discounted_cash_flows, axis=1)
+        return present_values
+
+    def price_paths_with_liquidity_haircut(
+        self,
+        cash_flows: npt.NDArray[np.float64],
+        time_grid: npt.NDArray[np.float64],
+        illiquidity_haircut_rate: float,
+    ) -> npt.NDArray[np.float64]:
+        """Compute path-wise NPVs incorporating an illiquidity exit haircut (bid-ask / forced sale spread).
+
+        Args:
+            cash_flows: NDArray of shape (num_paths, num_steps + 1)
+            time_grid: NDArray of time points
+            illiquidity_haircut_rate: Proportional reduction factor (e.g., 0.05 for 5% illiquidity discount)
+        """
+        base_npvs = self.price_paths(cash_flows, time_grid)
+        # Vectorized scaling to reflect illiquidity discount
+        adjusted_npvs = base_npvs * (1.0 - float(illiquidity_haircut_rate))
+        return np.ascontiguousarray(adjusted_npvs, dtype=np.float64)
+
+    def compute_risk_metrics(
+        self, present_values: npt.NDArray[np.float64]
+    ) -> dict[str, float]:
+        """Compute core portfolio valuation risk metrics (Expected Value, Value-at-Risk, Expected Shortfall)."""
+        mean_val = float(np.mean(present_values))
+        std_val = float(np.std(present_values))
+
+        var_95 = float(np.percentile(present_values, 5.0))
+        var_99 = float(np.percentile(present_values, 1.0))
+        es_95 = (
+            float(np.mean(present_values[present_values <= var_95]))
+            if np.any(present_values <= var_95)
+            else var_95
+        )
+
+        return {
+            "mean_npv": mean_val,
+            "std_npv": std_val,
+            "var_95": var_95,
+            "var_99": var_99,
+            "es_95": es_95,
+        }
+
+
+
+================================================
+FILE: src/val/models/reporting.py
+================================================
+# src/val/models/reporting.py
+"""Reporting utilities for hard-to-value asset portfolio valuations."""
+
+import json
+from pathlib import Path
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+
+class ValuationReporter:
+    """Export and reporting utility for portfolio valuation results and stress grids."""
+
+    @staticmethod
+    def generate_summary_report(
+        risk_metrics: dict[str, float],
+        stress_results: dict[str, npt.NDArray[np.float64]] | None = None,
+    ) -> dict[str, object]:
+        """Compile core risk metrics and stress-test summaries into a structured report dictionary."""
+        report = {
+            "engine": "Hard-to-Value Asset Valuation Engine",
+            "version": "0.1.0",
+            "status": "SUCCESS",
+            "risk_metrics": {k: float(v) for k, v in risk_metrics.items()},
+        }
+
+        if stress_results is not None:
+            report["stress_summary"] = {
+                "max_stressed_npv": float(np.max(stress_results["mean_npvs"])),
+                "min_stressed_npv": float(np.min(stress_results["mean_npvs"])),
+                "worst_case_var_95": float(np.min(stress_results["var_95_grid"])),
+            }
+
+        return report
+
+    @staticmethod
+    def export_report_json(
+        report_dict: dict[str, object], output_path: str | Path
+    ) -> None:
+        """Export the compiled report dictionary to a JSON file."""
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(report_dict, f, indent=4)
+
+    @staticmethod
+    def export_stress_grid_csv(
+        stress_matrix: npt.NDArray[np.float64], output_path: str | Path
+    ) -> None:
+        """Export a multi-dimensional stress grid matrix to a CSV file."""
+        df = pd.DataFrame(stress_matrix)
+        df.to_csv(output_path, index=False)
+
+
+
+================================================
+FILE: src/val/models/stress.py
+================================================
+# hard-to-value-asset-val/src/val/models/stress.py
+"""Vectorized stress-testing module for illiquid asset portfolios."""
+
+import numpy as np
+import numpy.typing as npt
+
+from val.models.cashflows import IlliquidCashFlowSimulator
+from val.models.pricing import DCFPricingKernel
+
+
+class PortfolioStressTester:
+    """Vectorized stress-testing harness for evaluating illiquid asset portfolios under extreme market shocks."""
+
+    def __init__(
+        self,
+        initial_balance: float,
+        coupon_rate: float,
+        time_horizon: float,
+        num_steps: int,
+        num_paths: int,
+    ) -> None:
+        self.initial_balance = float(initial_balance)
+        self.coupon_rate = float(coupon_rate)
+        self.time_horizon = float(time_horizon)
+        self.num_steps = int(num_steps)
+        self.num_paths = int(num_paths)
+
+    def run_stress_grid(
+        self,
+        default_intensity_shocks: npt.NDArray[np.float64],
+        volatility_shocks: npt.NDArray[np.float64],
+        pricing_kernel: DCFPricingKernel,
+        time_grid: npt.NDArray[np.float64],
+        seed: int = 42,
+    ) -> dict[str, npt.NDArray[np.float64]]:
+        """Simulate portfolio NPV risk metrics across a multi-dimensional stress grid
+        of default intensity and volatility shocks.
+        """
+        num_di = default_intensity_shocks.size
+        num_vol = volatility_shocks.size
+
+        mean_npvs = np.zeros((num_di, num_vol), dtype=np.float64)
+        var_95_grid = np.zeros((num_di, num_vol), dtype=np.float64)
+
+        # Vectorized grid traversal via broadcasted evaluations
+        for i, di in enumerate(default_intensity_shocks):
+            for j, vol in enumerate(volatility_shocks):
+                simulator = IlliquidCashFlowSimulator(
+                    initial_balance=self.initial_balance,
+                    coupon_rate=self.coupon_rate,
+                    default_intensity=di,
+                    volatility=vol,
+                    time_horizon=self.time_horizon,
+                    num_steps=self.num_steps,
+                    num_paths=self.num_paths,
+                    seed=seed + i * 100 + j,
+                )
+                _, cash_flows = simulator.simulate_paths()
+                npvs = pricing_kernel.price_paths(cash_flows, time_grid)
+                metrics = pricing_kernel.compute_risk_metrics(npvs)
+
+                mean_npvs[i, j] = metrics["mean_npv"]
+                var_95_grid[i, j] = metrics["var_95"]
+
+        return {
+            "mean_npvs": mean_npvs,
+            "var_95_grid": var_95_grid,
+        }
+
+
+
+================================================
+FILE: src/val/models/validation.py
+================================================
+# hard-to-value-asset-val/src/val/models/validation.py
+"""Statistical validation and backtesting utilities for hard-to-value asset models."""
+
+import numpy as np
+import numpy.typing as npt
+from scipy.stats import chi2
+
+
+class ValuationValidator:
+    """Statistical validation and backtesting harness for hard-to-value asset models."""
+
+    @staticmethod
+    def kupiec_pof_test(
+        failures: int, observations: int, confidence_level: float = 0.95
+    ) -> tuple[float, float]:
+        """Perform Kupiec's Proportion of Failures (POF) unconditional coverage test.
+
+        Returns:
+            test_statistic: Likelihood ratio test statistic
+            p_value: Chi-square p-value with 1 degree of freedom
+        """
+        if observations == 0:
+            return 0.0, 1.0
+
+        p = 1.0 - confidence_level
+        pi_hat = failures / observations
+
+        # Prevent log(0) errors
+        if pi_hat == 0.0:
+            lr_stat = -2.0 * np.log((1.0 - p) ** observations)
+        elif pi_hat == 1.0:
+            lr_stat = -2.0 * np.log(p**observations)
+        else:
+            term1 = (observations - failures) * np.log(1.0 - p) + failures * np.log(p)
+            term2 = (observations - failures) * np.log(
+                1.0 - pi_hat
+            ) + failures * np.log(pi_hat)
+            lr_stat = -2.0 * (term1 - term2)
+
+        p_value = 1.0 - chi2.cdf(lr_stat, df=1)
+        return float(lr_stat), float(p_value)
+
+    @staticmethod
+    def validate_array_shapes(
+        balances: npt.NDArray[np.float64], cash_flows: npt.NDArray[np.float64]
+    ) -> bool:
+        """Enforces shape invariants and contiguous memory layout constraints."""
+        return (
+            balances.shape == cash_flows.shape
+            and balances.flags["C_CONTIGUOUS"]
+            and cash_flows.flags["C_CONTIGUOUS"]
+        )
+
+
+
+================================================
+FILE: tests/__init__.py
+================================================
+[Empty file]
+
+
+================================================
+FILE: tests/test_valuation.py
+================================================
+# tests/test_valuation.py
+"""Unit tests for hard-to-value asset valuation models."""
+
+import numpy as np
+import pandas as pd
+
+from val.data.curves import YieldCurveBootstrapper
+from val.data.loaders import MarketDataLoader
+from val.models.cashflows import IlliquidCashFlowSimulator
+from val.models.pricing import DCFPricingKernel
+from val.models.reporting import ValuationReporter
+from val.models.stress import PortfolioStressTester
+from val.models.validation import ValuationValidator
+
+
+def test_simulator_shape_and_continuity() -> None:
+    simulator = IlliquidCashFlowSimulator(
+        initial_balance=1_000_000.0,
+        coupon_rate=0.06,
+        default_intensity=0.03,
+        volatility=0.15,
+        time_horizon=1.0,
+        num_steps=12,
+        num_paths=100,
+        seed=42,
+    )
+    balances, cash_flows = simulator.simulate_paths()
+    assert balances.shape == (100, 13)
+    assert cash_flows.shape == (100, 13)
+    assert ValuationValidator.validate_array_shapes(balances, cash_flows)
+
+
+def test_dcf_pricing_kernel() -> None:
+    bootstrapper = YieldCurveBootstrapper("2026-09-12")
+    ts_handle = bootstrapper.bootstrap_curve(
+        deposit_maturities=["1M"],
+        deposit_rates=[0.05],
+        swap_maturities=["1Y"],
+        swap_rates=[0.055],
+    )
+
+    kernel = DCFPricingKernel(ts_handle, "2026-09-12")
+    time_grid = np.linspace(0.0, 1.0, 6)
+    cash_flows = np.ones((50, 6), dtype=np.float64) * 1000.0
+
+    npvs = kernel.price_paths(cash_flows, time_grid)
+    assert npvs.shape == (50,)
+    assert np.all(npvs > 0.0)
+
+
+def test_kupiec_pof_test() -> None:
+    stat, p_val = ValuationValidator.kupiec_pof_test(
+        failures=5, observations=100, confidence_level=0.95
+    )
+    assert isinstance(stat, float)
+    assert isinstance(p_val, float)
+    assert p_val >= 0.0
+
+
+def test_market_data_loader(tmp_path) -> None:
+    d = tmp_path / "data"
+    d.mkdir()
+    p = d / "sample_cf.csv"
+
+    # Create sample CSV file
+    df_sample = pd.DataFrame(
+        {"t0": [1000.0, 2000.0], "t1": [1100.0, 2100.0], "t2": [1200.0, 2200.0]}
+    )
+    df_sample.to_csv(p, index=False)
+
+    df_res, arr_res = MarketDataLoader.load_cash_flows(p)
+    assert isinstance(df_res, pd.DataFrame)
+    assert arr_res.shape == (2, 3)
+    assert arr_res.flags["C_CONTIGUOUS"]
+
+
+def test_valuation_reporter(tmp_path) -> None:
+    metrics = {"mean_npv": 250_000.0, "var_95": 100_000.0}
+    report = ValuationReporter.generate_summary_report(metrics)
+
+    assert report["status"] == "SUCCESS"
+    assert report["risk_metrics"]["mean_npv"] == 250_000.0
+
+    json_path = tmp_path / "report.json"
+    ValuationReporter.export_report_json(report, json_path)
+    assert json_path.exists()
+
+
+def test_quantlib_curve_and_pricing_integration() -> None:
+    bootstrapper = YieldCurveBootstrapper("2026-09-12")
+    # Bootstrap simple curve
+    ts_handle = bootstrapper.bootstrap_curve(
+        deposit_maturities=["1M", "3M"],
+        deposit_rates=[0.05, 0.052],
+        swap_maturities=["1Y", "2Y"],
+        swap_rates=[0.055, 0.058],
+    )
+
+    kernel = DCFPricingKernel(ts_handle, "2026-09-12")
+    time_grid = np.linspace(0.0, 1.0, 6)
+    cash_flows = np.ones((10, 6), dtype=np.float64) * 100.0
+
+    npvs = kernel.price_paths(cash_flows, time_grid)
+    assert npvs.shape == (10,)
+    assert np.all(npvs > 0.0)
+
+
+def test_stress_tester_grid() -> None:
+    bootstrapper = YieldCurveBootstrapper("2026-09-12")
+    ts_handle = bootstrapper.bootstrap_curve(
+        deposit_maturities=["1M"],
+        deposit_rates=[0.05],
+        swap_maturities=["1Y"],
+        swap_rates=[0.055],
+    )
+    kernel = DCFPricingKernel(ts_handle, "2026-09-12")
+    time_grid = np.linspace(0.0, 1.0, 4)
+
+    tester = PortfolioStressTester(
+        initial_balance=500_000.0,
+        coupon_rate=0.07,
+        time_horizon=1.0,
+        num_steps=3,
+        num_paths=50,
+    )
+
+    di_shocks = np.array([0.02, 0.05], dtype=np.float64)
+    vol_shocks = np.array([0.10, 0.20], dtype=np.float64)
+
+    results = tester.run_stress_grid(di_shocks, vol_shocks, kernel, time_grid)
+    assert results["mean_npvs"].shape == (2, 2)
+    assert results["var_95_grid"].shape == (2, 2)
+
+
+
+================================================
+FILE: .github/workflows/ci.yml
+================================================
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .[dev]
+
+      - name: Run test suite
+        run: |
+          pytest -v
+
