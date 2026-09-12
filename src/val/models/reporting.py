@@ -19,6 +19,8 @@ class ValuationReporter:
     ) -> dict[str, object]:
         """Compile core risk metrics and stress-test summaries into a structured report dictionary."""
         report = {
+            "engine": "Hard-to-Value Asset Valuation Engine",
+            "version": "0.1.0",
             "status": "SUCCESS",
             "risk_metrics": {k: float(v) for k, v in risk_metrics.items()},
         }

@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Generated local outputs
+valuation_report.json
+stress_grid_npv.csv

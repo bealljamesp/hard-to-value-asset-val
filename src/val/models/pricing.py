@@ -7,7 +7,9 @@ import QuantLib as ql
 
 
 class DCFPricingKernel:
-    """Vectorized Discounted Cash Flow pricing kernel integrated with QuantLib term structures."""
+    """Vectorized Discounted Cash Flow pricing kernel integrated with QuantLib term structures
+    and illiquidity adjustment mechanics.
+    """
 
     def __init__(
         self, term_structure_handle: ql.YieldTermStructureHandle, evaluation_date: str
@@ -38,11 +40,27 @@ class DCFPricingKernel:
         using QuantLib term structure discount factors.
         """
         discount_factors = self.compute_discount_factors_for_grid(time_grid)
-
-        # Broadcast multiply and sum along axis 1 using native matrix operators / array broadcasting
         discounted_cash_flows = cash_flows * discount_factors[None, :]
         present_values = np.sum(discounted_cash_flows, axis=1)
         return present_values
+
+    def price_paths_with_liquidity_haircut(
+        self,
+        cash_flows: npt.NDArray[np.float64],
+        time_grid: npt.NDArray[np.float64],
+        illiquidity_haircut_rate: float,
+    ) -> npt.NDArray[np.float64]:
+        """Compute path-wise NPVs incorporating an illiquidity exit haircut (bid-ask / forced sale spread).
+
+        Args:
+            cash_flows: NDArray of shape (num_paths, num_steps + 1)
+            time_grid: NDArray of time points
+            illiquidity_haircut_rate: Proportional reduction factor (e.g., 0.05 for 5% illiquidity discount)
+        """
+        base_npvs = self.price_paths(cash_flows, time_grid)
+        # Vectorized scaling to reflect illiquidity discount
+        adjusted_npvs = base_npvs * (1.0 - float(illiquidity_haircut_rate))
+        return np.ascontiguousarray(adjusted_npvs, dtype=np.float64)
 
     def compute_risk_metrics(
         self, present_values: npt.NDArray[np.float64]

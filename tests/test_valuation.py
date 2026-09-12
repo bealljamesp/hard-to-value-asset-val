@@ -2,9 +2,14 @@
 """Unit tests for hard-to-value asset valuation models."""
 
 import numpy as np
+import pandas as pd
 
+from val.data.curves import YieldCurveBootstrapper
+from val.data.loaders import MarketDataLoader
 from val.models.cashflows import IlliquidCashFlowSimulator
 from val.models.pricing import DCFPricingKernel
+from val.models.reporting import ValuationReporter
+from val.models.stress import PortfolioStressTester
 from val.models.validation import ValuationValidator
 
 
@@ -20,12 +25,8 @@ def test_simulator_shape_and_continuity() -> None:
         seed=42,
     )
     balances, cash_flows = simulator.simulate_paths()
-
-    # Verify dimensions: (num_paths, num_steps + 1)
     assert balances.shape == (100, 13)
     assert cash_flows.shape == (100, 13)
-
-    # Verify C-contiguous memory flag for SIMD optimization
     assert ValuationValidator.validate_array_shapes(balances, cash_flows)
 
 
@@ -48,7 +49,6 @@ def test_dcf_pricing_kernel() -> None:
 
 
 def test_kupiec_pof_test() -> None:
-    # Test unexceptional backtest result
     stat, p_val = ValuationValidator.kupiec_pof_test(
         failures=5, observations=100, confidence_level=0.95
     )
@@ -57,8 +57,33 @@ def test_kupiec_pof_test() -> None:
     assert p_val >= 0.0
 
 
-from val.data.curves import YieldCurveBootstrapper
-from val.models.stress import PortfolioStressTester
+def test_market_data_loader(tmp_path) -> None:
+    d = tmp_path / "data"
+    d.mkdir()
+    p = d / "sample_cf.csv"
+
+    # Create sample CSV file
+    df_sample = pd.DataFrame(
+        {"t0": [1000.0, 2000.0], "t1": [1100.0, 2100.0], "t2": [1200.0, 2200.0]}
+    )
+    df_sample.to_csv(p, index=False)
+
+    df_res, arr_res = MarketDataLoader.load_cash_flows(p)
+    assert isinstance(df_res, pd.DataFrame)
+    assert arr_res.shape == (2, 3)
+    assert arr_res.flags["C_CONTIGUOUS"]
+
+
+def test_valuation_reporter(tmp_path) -> None:
+    metrics = {"mean_npv": 250_000.0, "var_95": 100_000.0}
+    report = ValuationReporter.generate_summary_report(metrics)
+
+    assert report["status"] == "SUCCESS"
+    assert report["risk_metrics"]["mean_npv"] == 250_000.0
+
+    json_path = tmp_path / "report.json"
+    ValuationReporter.export_report_json(report, json_path)
+    assert json_path.exists()
 
 
 def test_quantlib_curve_and_pricing_integration() -> None:
