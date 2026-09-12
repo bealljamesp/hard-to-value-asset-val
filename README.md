@@ -50,7 +50,7 @@ hard-to-value-asset-val/
 
 ---
 
-## Intall and Setup
+## Install and Setup
 
 ```
 git clone [https://github.com/YOUR_USERNAME/hard-to-value-asset-val.git](https://github.com/YOUR_USERNAME/hard-to-value-asset-val.git)
@@ -70,3 +70,14 @@ python src/val/main.py
 pytest -v
 ```
 
+---
+
+## Notes
+
+- Zero-Copy Memory Discipline: Array mappings explicitly enforce C-contiguous layouts (order='C', np.ascontiguousarray), avoiding memory fragmentation during linear algebra operations.
+
+- QuantLib & Polars Integration: High-performance ingestion via Polars/Arrow combined with precise QuantLib yield curve bootstrapping provides real institutional-grade fluency.
+
+- Robust CI Pipeline: The GitHub Actions workflow cleanly targets Python 3.12 and installs the package in editable development mode (.[dev]), ensuring automated validation on every commit.
+
+---
