@@ -1,4 +1,4 @@
-# hard-to-value-asset-val/src/val/models/curves.py
+# hard-to-value-asset-val/src/val/data/curves.py
 """Interest rate curve models for hard-to-value assets."""
 
 import numpy as np

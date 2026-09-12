@@ -3,33 +3,44 @@
 
 import numpy as np
 import numpy.typing as npt
+import QuantLib as ql
 
 
 class DCFPricingKernel:
-    """Vectorized Discounted Cash Flow pricing kernel for evaluating illiquid asset paths
-    using continuous or discrete discount factors.
-    """
+    """Vectorized Discounted Cash Flow pricing kernel integrated with QuantLib term structures."""
 
-    def __init__(self, discount_factors: npt.NDArray[np.float64]) -> None:
-        # Ensure contiguous memory layout for high-performance matrix operations
-        self.discount_factors = np.ascontiguousarray(discount_factors, dtype=np.float64)
+    def __init__(
+        self, term_structure_handle: ql.YieldTermStructureHandle, evaluation_date: str
+    ) -> None:
+        self.ts_handle = term_structure_handle
+        self.eval_date = ql.Date(evaluation_date, "%Y-%m-%d")
+
+    def compute_discount_factors_for_grid(
+        self, time_grid: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Extract vectorized discount factors for a given array of year fractions."""
+        base_serial = self.eval_date.serialNumber()
+        serial_offsets = (time_grid * 365.25).astype(int)
+
+        discount_factors = np.empty_like(time_grid, dtype=np.float64)
+        ts = self.ts_handle.currentLink()
+
+        for i, serial in enumerate(base_serial + serial_offsets):
+            d = ql.Date(int(serial))
+            discount_factors[i] = ts.discount(d)
+
+        return np.ascontiguousarray(discount_factors, dtype=np.float64)
 
     def price_paths(
-        self, cash_flows: npt.NDArray[np.float64]
+        self, cash_flows: npt.NDArray[np.float64], time_grid: npt.NDArray[np.float64]
     ) -> npt.NDArray[np.float64]:
-        """Compute the Present Value (PV) for each Monte Carlo path simultaneously.
-
-        Args:
-            cash_flows: NDArray of shape (num_paths, num_steps + 1)
-
-        Returns:
-            present_values: NDArray of shape (num_paths,) representing path-wise NPVs.
+        """Compute the Present Value (PV) for each Monte Carlo path simultaneously
+        using QuantLib term structure discount factors.
         """
-        # Forced vectorization: dot product via native matrix operator (@) across rows
-        # cash_flows shape: (P, T), discount_factors shape: (T,) -> broadcast multiply and sum along axis 1
-        discounted_cash_flows = cash_flows * self.discount_factors[None, :]
+        discount_factors = self.compute_discount_factors_for_grid(time_grid)
 
-        # O(1) memory footprint reduction via axis summation
+        # Broadcast multiply and sum along axis 1 using native matrix operators / array broadcasting
+        discounted_cash_flows = cash_flows * discount_factors[None, :]
         present_values = np.sum(discounted_cash_flows, axis=1)
         return present_values
 
@@ -40,11 +51,8 @@ class DCFPricingKernel:
         mean_val = float(np.mean(present_values))
         std_val = float(np.std(present_values))
 
-        # 95% and 99% Value-at-Risk (parametric / historical hybrid on simulation paths)
         var_95 = float(np.percentile(present_values, 5.0))
         var_99 = float(np.percentile(present_values, 1.0))
-
-        # Expected Shortfall (Conditional VaR at 95%)
         es_95 = (
             float(np.mean(present_values[present_values <= var_95]))
             if np.any(present_values <= var_95)
