@@ -1,4 +1,4 @@
-# src/val/main.py
+# hard-to-value-asset-val/src/val/main.py
 """Entry point for the Hard-to-Value Asset Valuation Engine."""
 
 import numpy as np
